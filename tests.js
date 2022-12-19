@@ -44,7 +44,8 @@ const runTests = (url, runs, label) => {
   return new Promise(async (resolve, reject) => {
     for (i = 0; i < runs; i++) {
       const chrome = await chromeLauncher.launch({
-        chromeFlags: ["--headless"],
+        port: 3030,
+        chromeFlags: ["--headless", "--disable -gpu", "--no-sandbox"],
       });
       const options = {
         logLevel: "info",

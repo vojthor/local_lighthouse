@@ -1,0 +1,13 @@
+version: "3"
+services:
+    local-ligthouse:
+      build: .
+      ports:
+        - 3030:3030
+      volumes:
+        - ./:/opt/app    
+    chrome:
+      image: browserless/chrome
+      ports: 
+        - 3000:3000             #Assign 3000 port to chrome service. we can assign any port to it.
+ 
