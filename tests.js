@@ -64,7 +64,7 @@ const runTests = (url, runs, label) => {
       const LH_TBT = report.audits["total-blocking-time"].displayValue;
       const LH_CLS = report.audits["cumulative-layout-shift"].displayValue;
 
-      let metricsArray = [
+      let metricsArray = {
         LH_SCORE,
         LH_TTI,
         LH_SPEED_INDEX,
@@ -72,12 +72,13 @@ const runTests = (url, runs, label) => {
         LH_LCP,
         LH_TBT,
         LH_CLS,
-      ];
-      metricsArray = metricsArray.filter(Boolean);
-      metricsArray = metricsArray.map((entry) =>
-        entry.replace("ms", "").trim()
-      );
-      metricsArray = metricsArray.map((entry) => entry.replace("s", "").trim());
+      };
+
+      // metricsArray = metricsArray.filter(Boolean);
+      // metricsArray = metricsArray.map((entry) =>
+      //   entry.replace("ms", "").trim()
+      // );
+      // metricsArray = metricsArray.map((entry) => entry.replace("s", "").trim());
 
       results.push(metricsArray);
 
@@ -102,24 +103,21 @@ const runTests = (url, runs, label) => {
     }
 
     // Write results to file
-    const stream = fs.createWriteStream(`./results/${dirName}/results.txt`, {
+    const stream = fs.createWriteStream(`./results/${dirName}/results.json`, {
       flags: "a",
     });
-    results.forEach((result) => {
-      stream.write(`${result.join(",")}\n`);
-    });
+
+    stream.write(JSON.stringify(results));
     stream.end();
 
     // Write errors to file
     const streamError = fs.createWriteStream(
-      `./results/${dirName}/errors.txt`,
+      `./results/${dirName}/errors.json`,
       {
         flags: "a",
       }
     );
-    errors.forEach((error) => {
-      streamError.write(`${error.join(",")}\n`);
-    });
+    streamError.write(JSON.stringify(errors));
     streamError.end();
 
     resolve(`All finished`);

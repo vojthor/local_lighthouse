@@ -6,6 +6,7 @@ const port = 3030;
 
 app.use(express.static(__dirname));
 app.use(express.json());
+app.use(express.static("build"));
 
 // Make sure folder exist
 !fs.existsSync("./results/") && fs.mkdirSync("./results/");
@@ -17,7 +18,8 @@ app.get("/", (req, res) => {
   fs.readdirSync(testFolder).forEach((file) => {
     folders.push[file];
   });
-  res.sendFile(path.join(__dirname, "/index.html"));
+  // res.sendFile(path.join(__dirname, "/index.html"));
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 app.get("/tests", (req, res) => {
@@ -34,7 +36,7 @@ app.get("/tests", (req, res) => {
 app.get("/tests/detail/:folderName", function (req, res) {
   try {
     const results = fs.readFileSync(
-      `./results/${req.params.folderName}/results.txt`,
+      `./results/${req.params.folderName}/results.json`,
       "utf8"
     );
     // const errors = fs.readFileSync(
