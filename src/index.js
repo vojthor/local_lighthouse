@@ -1,36 +1,12 @@
 import "./basic.min.css";
+import "./style";
 import Tests from "./components/Tests";
 import { useState } from "preact/hooks";
 
-import "./style";
+import NewTest from "./components/NewTest";
 
-export default function App() {
+const App = () => {
   const [processing, setProcessing] = useState(false);
-  const [options, setOptions] = useState({});
-
-  const runTests = async () => {
-    setProcessing(true);
-
-    if (!options.url) {
-      return;
-    }
-
-    const data = await fetch(`http://localhost:3030/run`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(options),
-    });
-    const parsedData = await data.json();
-    setProcessing(false);
-    location.reload();
-  };
-
-  const setRunOptions = (e) => {
-    const { name, value } = e.target;
-    setOptions((prevState) => ({ ...prevState, [name]: value }));
-  };
 
   return (
     <div>
@@ -42,39 +18,10 @@ export default function App() {
         <div class="gauge-loader">Loading&#8230;</div>
       </div>
       <h1>Local Lighthouse</h1>
-      <div>
-        <h2>New test</h2>
-        <div>
-          <input
-            class="js-testUrl"
-            name="url"
-            onChange={setRunOptions}
-            type="url"
-            placeholder="https://pond5.com"
-            pattern="https://.*"
-            size="30"
-          />
-          <input
-            class="js-testRuns"
-            type="number"
-            name="runs"
-            placeholder="Number of runs"
-            onChange={setRunOptions}
-          />
-          <input
-            class="js-testLabel"
-            type="label"
-            name="label"
-            placeholder="Label"
-            onChange={setRunOptions}
-          />
-          <button class="js-testTrigger" onClick={runTests}>
-            Run Lighthouse
-          </button>
-        </div>
-      </div>
-
+      <NewTest setProcessing={setProcessing} />
       <Tests />
     </div>
   );
-}
+};
+
+export default App;

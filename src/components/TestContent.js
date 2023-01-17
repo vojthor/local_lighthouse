@@ -3,7 +3,12 @@ import { median } from "../helpers/calc";
 const TestContent = ({ lhValues }) => {
   const elements = [];
   for (const [key, values] of Object.entries(lhValues)) {
-    const el = (
+    // Skip URL value
+    if (key === "URL") {
+      continue;
+    }
+
+    elements.push(
       <div>
         <h3>{key}</h3>
         {values.map((value, i) => (
@@ -16,8 +21,6 @@ const TestContent = ({ lhValues }) => {
         </div>
       </div>
     );
-
-    elements.push(el);
   }
   return elements;
 };

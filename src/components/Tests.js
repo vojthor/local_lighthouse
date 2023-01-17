@@ -1,14 +1,12 @@
 import { Fragment } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
-import { median } from "../helpers/calc";
 import { fetchTestData } from "../helpers/fetch";
+import CompareContent from "./CompareContent";
 import FormattedTestString from "./FormattedTestString";
 import TestContent from "./TestContent";
 import TestsSelect from "./TestSelect";
 
-const LH_KEY = "LH";
-
-export default function Tests() {
+const Tests = () => {
   const [compare, setCompare] = useState(false);
   const [stored, setStored] = useState([]);
   const [testContent, setTestContent] = useState({});
@@ -31,85 +29,24 @@ export default function Tests() {
   // TODO refactor
   const compared = () => {
     const elements = [];
-    const UP_ARROW = <icon>⬆</icon>;
-    const DOWN_ARROW = <icon>⬇</icon>;
 
     if (compareTestContent.length === 0) {
       return [];
     }
 
-    const hasDifferentLength = testContent.length !== compareTestContent.length;
-
-    const compareValue = (value1, value2, key) => {
-      // Everything expect LH - the lower the better
-      if (key === LH_KEY) {
-        return value2 > value1;
-      } else {
-        return value1 > value2;
+    for (const [key, values] of Object.entries(testContent)) {
+      // Skip URL value
+      if (key === "URL") {
+        continue;
       }
-    };
 
-    // Test is the same, iterate over it and compare
-    if (!hasDifferentLength) {
-      for (const [key, values] of Object.entries(testContent)) {
-        const MEDIAN_BASE = median(values).toFixed(2);
-        const MEDIAN_COMPARING = median(compareTestContent[key]).toFixed(2);
-        const MEDIAN_IS_HIGHER = compareValue(
-          MEDIAN_COMPARING,
-          MEDIAN_BASE,
-          key
-        );
-
-        const MEDIAN_IS_LOWER = compareValue(
-          MEDIAN_BASE,
-          MEDIAN_COMPARING,
-          key
-        );
-
-        const el = (
-          <div>
-            <h3>{key}</h3>
-            {values.map((value, i) => {
-              const IS_HIGHER = compareValue(
-                compareTestContent[key][i],
-                value,
-                key
-              );
-              const IS_LOWER = compareValue(
-                value,
-                compareTestContent[key][i],
-                key
-              );
-
-              return (
-                <div
-                  key={i}
-                  class={`LHresults-gridItem LHresults-gridItem--${
-                    IS_HIGHER ? "higher" : IS_LOWER ? "lower" : ""
-                  }`}
-                >
-                  {compareTestContent[key][i]}
-                  {IS_HIGHER && (key === LH_KEY ? DOWN_ARROW : UP_ARROW)}
-                  {IS_LOWER && (key === LH_KEY ? UP_ARROW : DOWN_ARROW)}
-                </div>
-              );
-            })}
-            <div
-              class={`LHresults-gridItem LHresults-gridItem--median LHresults-median--${
-                MEDIAN_IS_HIGHER ? "higher" : MEDIAN_IS_LOWER ? "lower" : ""
-              }`}
-            >
-              <b>
-                {MEDIAN_COMPARING}
-                {MEDIAN_IS_HIGHER && (key === LH_KEY ? DOWN_ARROW : UP_ARROW)}
-                {MEDIAN_IS_LOWER && (key === LH_KEY ? UP_ARROW : DOWN_ARROW)}
-              </b>
-            </div>
-          </div>
-        );
-
-        elements.push(el);
-      }
+      elements.push(
+        <CompareContent
+          metricKey={key}
+          values={values}
+          compareTestContent={compareTestContent}
+        />
+      );
     }
 
     return elements;
@@ -125,6 +62,8 @@ export default function Tests() {
           onChangeFn={(e) => {
             if (e.target.value !== "default") {
               fetchTestData(e.target.value, setTestContent);
+            } else {
+              setTestContent({});
             }
           }}
         />
@@ -136,7 +75,7 @@ export default function Tests() {
             checked={compare}
             onChange={() => setCompare(!compare)}
           />
-          <label for="compare">Compare</label>
+          <label for="compare">Compare with </label>
         </div>
         {compare && (
           <TestsSelect
@@ -145,6 +84,8 @@ export default function Tests() {
             onChangeFn={(e) => {
               if (e.target.value !== "default") {
                 fetchTestData(e.target.value, setCompareTestContent);
+              } else {
+                setCompareTestContent({});
               }
             }}
           />
@@ -168,6 +109,23 @@ export default function Tests() {
                 />
               </b>
             </h2>
+            {testContent.URL !== compareTestContent.URL && (
+              <div class="LHresults-warning">
+                <div>
+                  <div>
+                    You comparing different URLs:{" "}
+                    <a href={testContent.URL}>{testContent.URL}</a> and{" "}
+                    <a href={compareTestContent.URL}>
+                      {compareTestContent.URL}
+                    </a>{" "}
+                  </div>
+                  <div>Make sure it make sense...</div>
+                </div>
+                <div>
+                  <i>🤔</i>
+                </div>
+              </div>
+            )}
             <div class="LHresults-grid">
               {compared().map((content) => content)}
             </div>
@@ -176,4 +134,6 @@ export default function Tests() {
       </div>
     </div>
   );
-}
+};
+
+export default Tests;

@@ -2,6 +2,7 @@
 export const fetchTestData = async (folderName, setFn) => {
   const data = await fetch(`http://localhost:3030/tests/detail/${folderName}`);
 
+  let URL = "";
   const LH_VALUES = [];
   const LH_TTI_VALUES = [];
   const LH_SPEED_INDEX_VALUES = [];
@@ -16,6 +17,8 @@ export const fetchTestData = async (folderName, setFn) => {
     const { LH_SCORE, LH_CLS, LH_FCP, LH_LCP, LH_SPEED_INDEX, LH_TBT, LH_TTI } =
       result;
 
+    URL = result.URL;
+
     LH_VALUES.push(parseFloat(LH_SCORE));
     LH_TTI_VALUES.push(parseFloat(LH_TTI));
     LH_SPEED_INDEX_VALUES.push(parseFloat(LH_SPEED_INDEX));
@@ -26,6 +29,7 @@ export const fetchTestData = async (folderName, setFn) => {
   });
 
   const LH_VALUES_FINAL = {
+    URL,
     LH: LH_VALUES,
     LH_TTI: LH_TTI_VALUES,
     LH_SPEED_INDEX: LH_SPEED_INDEX_VALUES,
@@ -37,4 +41,23 @@ export const fetchTestData = async (folderName, setFn) => {
 
   // setFn(elements);
   setFn(LH_VALUES_FINAL);
+};
+
+export const startTests = async (options, setProcessingFn) => {
+  setProcessingFn(true);
+
+  if (!options.url) {
+    return;
+  }
+
+  const data = await fetch(`http://localhost:3030/run`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(options),
+  });
+  const parsedData = await data.json();
+  setProcessingFn(false);
+  location.reload();
 };
