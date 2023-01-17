@@ -65,6 +65,7 @@ const runTests = (url, runs, label) => {
       const LH_CLS = report.audits["cumulative-layout-shift"].displayValue;
 
       let metricsArray = {
+        URL: url,
         LH_SCORE,
         LH_TTI,
         LH_SPEED_INDEX,

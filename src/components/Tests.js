@@ -1,123 +1,179 @@
-import { useEffect, useState } from "preact/hooks";
+import { Fragment } from "preact";
+import { useEffect, useState, useRef } from "preact/hooks";
+import { median } from "../helpers/calc";
+import { fetchTestData } from "../helpers/fetch";
+import FormattedTestString from "./FormattedTestString";
+import TestContent from "./TestContent";
+import TestsSelect from "./TestSelect";
+
+const LH_KEY = "LH";
 
 export default function Tests() {
-  const [compare, setCompare] = useState([]);
+  const [compare, setCompare] = useState(false);
   const [stored, setStored] = useState([]);
-  const [testContent, setTestContent] = useState([]);
+  const [testContent, setTestContent] = useState({});
+  const [compareTestContent, setCompareTestContent] = useState({});
+
+  // Refs
+  const primaryTest = useRef(null);
+  const comparedTest = useRef(null);
 
   useEffect(() => {
     const fetchTests = async () => {
       let url = "http://localhost:3030/tests";
       const response = await fetch(url);
       const data = await response.json();
-      console.log(data.folders);
       setStored(data.folders);
     };
     fetchTests();
   }, []);
 
-  // Fetch tests detail
-  const fetchTestData = async (folderName, el) => {
-    const data = await fetch(
-      `http://localhost:3030/tests/detail/${folderName}`
-    );
-
-    const LH_VALUES = [];
-    const LH_TTI_VALUES = [];
-    const LH_SPEED_INDEX_VALUES = [];
-    const LH_FCP_VALUES = [];
-    const LH_LCP_VALUES = [];
-    const LH_TBT_VALUES = [];
-    const LH_CLS_VALUES = [];
-
-    const { results, errors } = await data.json();
-
-    JSON.parse(results).forEach((result) => {
-      const {
-        LH_SCORE,
-        LH_CLS,
-        LH_FCP,
-        LH_LCP,
-        LH_SPEED_INDEX,
-        LH_TBT,
-        LH_TTI,
-      } = result;
-
-      LH_VALUES.push(parseFloat(LH_SCORE));
-      LH_TTI_VALUES.push(parseFloat(LH_TTI));
-      LH_SPEED_INDEX_VALUES.push(parseFloat(LH_SPEED_INDEX));
-      LH_FCP_VALUES.push(parseFloat(LH_FCP));
-      LH_LCP_VALUES.push(parseFloat(LH_LCP));
-      LH_TBT_VALUES.push(parseFloat(LH_TBT));
-      LH_CLS_VALUES.push(parseFloat(LH_CLS));
-    });
-
-    const LH_VALUES_FINAL = {
-      LH: LH_VALUES,
-      LH_TTI: LH_TTI_VALUES,
-      LH_SPEED_INDEX: LH_SPEED_INDEX_VALUES,
-      LH_FCP: LH_FCP_VALUES,
-      LH_LCP: LH_LCP_VALUES,
-      LH_TBT: LH_TBT_VALUES,
-      LH_CLS: LH_CLS_VALUES,
-    };
-
+  // TODO refactor
+  const compared = () => {
     const elements = [];
-    for (const [key, values] of Object.entries(LH_VALUES_FINAL)) {
-      console.log(values);
-      const el = (
-        <div>
-          <h3>{key}</h3>
-          {values.map((value, i) => (
-            <div key={i} class="LHresults-gridItem">
-              {value}
-            </div>
-          ))}
-          <div class="LHresults-gridItem LHresults-gridItem--median">
-            <b>{median(values).toFixed(2)}</b>
-          </div>
-        </div>
-      );
+    const UP_ARROW = <icon>⬆</icon>;
+    const DOWN_ARROW = <icon>⬇</icon>;
 
-      elements.push(el);
+    if (compareTestContent.length === 0) {
+      return [];
     }
 
-    setTestContent(elements);
+    const hasDifferentLength = testContent.length !== compareTestContent.length;
+
+    const compareValue = (value1, value2, key) => {
+      // Everything expect LH - the lower the better
+      if (key === LH_KEY) {
+        return value2 > value1;
+      } else {
+        return value1 > value2;
+      }
+    };
+
+    // Test is the same, iterate over it and compare
+    if (!hasDifferentLength) {
+      for (const [key, values] of Object.entries(testContent)) {
+        const MEDIAN_BASE = median(values).toFixed(2);
+        const MEDIAN_COMPARING = median(compareTestContent[key]).toFixed(2);
+        const MEDIAN_IS_HIGHER = compareValue(
+          MEDIAN_COMPARING,
+          MEDIAN_BASE,
+          key
+        );
+
+        const MEDIAN_IS_LOWER = compareValue(
+          MEDIAN_BASE,
+          MEDIAN_COMPARING,
+          key
+        );
+
+        const el = (
+          <div>
+            <h3>{key}</h3>
+            {values.map((value, i) => {
+              const IS_HIGHER = compareValue(
+                compareTestContent[key][i],
+                value,
+                key
+              );
+              const IS_LOWER = compareValue(
+                value,
+                compareTestContent[key][i],
+                key
+              );
+
+              return (
+                <div
+                  key={i}
+                  class={`LHresults-gridItem LHresults-gridItem--${
+                    IS_HIGHER ? "higher" : IS_LOWER ? "lower" : ""
+                  }`}
+                >
+                  {compareTestContent[key][i]}
+                  {IS_HIGHER && (key === LH_KEY ? DOWN_ARROW : UP_ARROW)}
+                  {IS_LOWER && (key === LH_KEY ? UP_ARROW : DOWN_ARROW)}
+                </div>
+              );
+            })}
+            <div
+              class={`LHresults-gridItem LHresults-gridItem--median LHresults-median--${
+                MEDIAN_IS_HIGHER ? "higher" : MEDIAN_IS_LOWER ? "lower" : ""
+              }`}
+            >
+              <b>
+                {MEDIAN_COMPARING}
+                {MEDIAN_IS_HIGHER && (key === LH_KEY ? DOWN_ARROW : UP_ARROW)}
+                {MEDIAN_IS_LOWER && (key === LH_KEY ? UP_ARROW : DOWN_ARROW)}
+              </b>
+            </div>
+          </div>
+        );
+
+        elements.push(el);
+      }
+    }
+
+    return elements;
   };
 
   return (
     <div>
       <h2>Stored tests</h2>
-      <div>
-        <select
-          class="js-tests"
-          name="Tests"
-          id="cars"
-          onChange={(e) => {
+      <div class="TestSelect">
+        <TestsSelect
+          stored={stored}
+          selectRef={primaryTest}
+          onChangeFn={(e) => {
             if (e.target.value !== "default") {
-              fetchTestData(e.target.value);
+              fetchTestData(e.target.value, setTestContent);
             }
           }}
-        >
-          <option value="default">Select test</option>
-          {stored.map((storedTest) => (
-            <option value={storedTest}>
-              {new Date(storedTest.split("|")[0]).toLocaleDateString()}
-              {new Date(storedTest.split("|")[0]).toLocaleTimeString()}
-              {storedTest.split("|")[1]}
-            </option>
-          ))}
-        </select>
+        />
+        <div class="CompareToggle">
+          <input
+            type="checkbox"
+            name="compare"
+            value="Compare"
+            checked={compare}
+            onChange={() => setCompare(!compare)}
+          />
+          <label for="compare">Compare</label>
+        </div>
+        {compare && (
+          <TestsSelect
+            stored={stored}
+            selectRef={comparedTest}
+            onChangeFn={(e) => {
+              if (e.target.value !== "default") {
+                fetchTestData(e.target.value, setCompareTestContent);
+              }
+            }}
+          />
+        )}
       </div>
-      <div class="LHresults-grid">{testContent.map((content) => content)}</div>
+      <div class="LHresults-grid">
+        <TestContent lhValues={testContent} />
+      </div>
+      <div>
+        {Object.values(compareTestContent).length > 0 && (
+          <Fragment>
+            <h2>
+              Comparing{" "}
+              <b>
+                <FormattedTestString testString={primaryTest?.current?.value} />
+              </b>
+              {` and `}
+              <b>
+                <FormattedTestString
+                  testString={comparedTest?.current?.value}
+                />
+              </b>
+            </h2>
+            <div class="LHresults-grid">
+              {compared().map((content) => content)}
+            </div>
+          </Fragment>
+        )}
+      </div>
     </div>
   );
 }
-
-// Count median
-const median = (numbers) => {
-  const mid = Math.floor(numbers.length / 2),
-    nums = [...numbers].sort((a, b) => a - b);
-
-  return numbers.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
-};

@@ -12,6 +12,17 @@ body {
   margin: 0 auto;
 }
 
+.TestSelect {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.CompareToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .LHresults-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -31,21 +42,44 @@ body {
   font-weight: 800;
 }
 
+.LHresults-median--higher {
+  box-shadow: inset 0 0 0 4px #f44336;
+}
+
+.LHresults-median--lower {
+  box-shadow: inset 0 0 0 4px #5ba46a	;
+}
+
 .LHresults-heading.is-hidden ~ .LHresults-grid {
   display: none;
 }
 
 .LHresults-gridItem {
-  background-color: #1d84fa;
+  background-color: #7d8aa7	;
   border: 1px solid #fff;
   padding: 5px;
   font-size: 19px;
   text-align: center;
 }
 
+.LHresults-gridItem i {
+  font-style: normal;
+}
+
+.LHresults-gridItem--lower {
+  background-color: #5ba46a;
+  color: white;
+}
+
+.LHresults-gridItem--higher {
+  background-color: #f44336;
+  color: white;
+}
+
 .LHresults-gridItem--median {
-  background-color: palegreen;
+  background-color: #d89432	;
   font-weight: 600;
+  color: white;
 }
 
 .LHresults-spinner {

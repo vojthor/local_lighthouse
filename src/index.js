@@ -47,10 +47,12 @@ export default function App() {
         <div>
           <input
             class="js-testUrl"
-            type="text"
             name="url"
-            placeholder="URL"
             onChange={setRunOptions}
+            type="url"
+            placeholder="https://pond5.com"
+            pattern="https://.*"
+            size="30"
           />
           <input
             class="js-testRuns"
