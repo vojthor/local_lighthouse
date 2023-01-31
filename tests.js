@@ -3,40 +3,6 @@ const lighthouse = require("lighthouse");
 const chromeLauncher = require("chrome-launcher");
 const fs = require("fs");
 
-const runTests2 = (url, runLimit) =>
-  new Promise((resolve, reject) => {
-    const execSync = require("child_process").execSync;
-    const [parseErrors, parseResults] = require("./parser");
-    const time = new Date().toISOString();
-    let runs = 0;
-
-    const dir = `./results/${time}`;
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir);
-    }
-
-    do {
-      console.log(`Starting performance test ${runs + 1}`); // Logs this to the console just before it kicks off
-      try {
-        execSync(
-          `lighthouse ${url} --headless --output json --output-path="./results/${time}/${
-            runs + 1
-          }_result.json" `
-        ); // Executes this on the command line to run the performance test
-      } catch (err) {
-        console.log(`Performance test ${runs + 1} failed`); // If Lighthouse happens to fail it'll log this to the console and log the error message
-        break;
-      }
-      console.log(`Finished running performance test ${runs + 1}`); // Logs this to the console just after it finishes running each performance test
-      runs++;
-    } while (runs < runLimit); // Keeps looping around until this condition is false
-
-    parseResults(time, runLimit);
-    parseErrors(time, runLimit);
-
-    resolve(`All finished`);
-  });
-
 const runTests = (url, runs, label) => {
   const results = [];
   const errors = [];
